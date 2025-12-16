@@ -1,0 +1,12 @@
+[
+    {
+        "id": 0,
+        "mensaje": "Estirar espalda",
+        "hora": "17:16",
+        "fecha": null,
+        "tipo": "frecuente",
+        "activo": true,
+        "ejecutado": false,
+        "ultimaEjecucion": null
+    }  
+]
