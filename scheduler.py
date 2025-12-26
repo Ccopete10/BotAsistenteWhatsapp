@@ -73,20 +73,20 @@ def differentDay(lastExecute: str) -> bool:
     return lastDate != dateToday
 
 #frecuente
-#diaria
-#unica
+#diario
+#unico
 
 def ifCanSend(reminder: dict) -> bool:
-            if reminder["tipo"] == "unica":
-                return (isActive(reminder) and
-                        notExecute(reminder) and
-                        dateMatches(reminder) and 
-                        timeMatches(reminder))
-            elif reminder["tipo"] == "diaria":
-                return (isActive(reminder)and
-                        differentDay(reminder["ultimaEjecucion"]) and
-                        timeMatches(reminder))
-            return False
+    if reminder["tipo"] == "unico":
+        return (isActive(reminder) and
+                notExecute(reminder) and
+                dateMatches(reminder) and 
+                timeMatches(reminder))
+    elif reminder["tipo"] == "diario":
+        return (isActive(reminder)and
+                differentDay(reminder["ultimaEjecucion"]) and
+                timeMatches(reminder))
+    return False
 
 while True:
     now = dt.datetime.now()
@@ -105,7 +105,7 @@ while True:
             text = brain.buildMessage(reminder)
             #llamar funcion del sender para enviar el mensaje a whatsapp
             sender.sendMessage(text)
-            if reminder["tipo"] == "unica":
+            if reminder["tipo"] == "unico":
                 reminder["ejecutado"] = True
             
             reminder["ultimaEjecucion"] = currentMinute
