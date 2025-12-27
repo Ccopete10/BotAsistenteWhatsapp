@@ -25,13 +25,13 @@ def createReminderDaily(message: str, time: str) -> dict:
     }
     return reminder
 
-def createReminderFrequent(message: str, frecuency: int, timeStart: str, timeFinish: str) -> dict:
+def createReminderFrequent(message: str, frecuency: int, timeStart: str, timeEnd: str) -> dict:
     reminder = {
         "id": None,
         "mensaje": message,
         "intervaloMinutos": frecuency,
         "horaInicio": timeStart,
-        "horaFin": timeFinish,
+        "horaFin": timeEnd,
         "tipo": "frecuente",
         "activo": True,
         "ultimaEjecucion": None, 

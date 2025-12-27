@@ -72,6 +72,32 @@ def differentDay(lastExecute: str) -> bool:
     lastDate = lastExecute.split(" ")[0]   
     return lastDate != dateToday
 
+def isInTimeRange(timeStart: str, timeEnd: str, now: str) -> bool:
+    return timeStart <= now <= timeEnd
+
+def neverExecuted(lastExecution) -> bool:
+    return lastExecution is None
+
+def intervalElapsed(lastExecution: str, interval: int) -> bool:
+    lastExecutionDt = dt.datetime.strptime(lastExecution, "%Y-%m-%d %H:%M")
+    now = dt.datetime.now()
+    diffMinutes = (now - lastExecutionDt).total_seconds()/60
+    return diffMinutes >= interval
+
+def canSendFrequent(reminder: dict) -> bool:
+    nowTime = dt.datetime.now().strftime("%H:%M")
+    
+    if not reminder["activo"]:
+        return False
+    
+    if not isInTimeRange(reminder["horaInicio"], reminder["horaFin"], nowTime):
+        return False
+    
+    if neverExecuted(reminder["ultimaEjecucion"]):
+        return True
+    
+    return intervalElapsed(reminder["ultimaEjecucion"], reminder["intervaloMinutos"])
+
 #frecuente
 #diario
 #unico
@@ -86,6 +112,9 @@ def ifCanSend(reminder: dict) -> bool:
         return (isActive(reminder)and
                 differentDay(reminder["ultimaEjecucion"]) and
                 timeMatches(reminder))
+    elif reminder["tipo"] == "frecuente":
+        return canSendFrequent(reminder)
+        
     return False
 
 while True:
