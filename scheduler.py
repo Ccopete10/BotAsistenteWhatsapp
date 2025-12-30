@@ -4,17 +4,17 @@ import brain
 import sender
 import time
 
-def readReminders() -> list:
-    routData = 'data\\reminders.json'
+def read_reminders() -> list:
+    rout_data = 'data\\reminders.json'
     
     try:
-        with open(routData, 'r', encoding= 'utf-8') as data:
-            dataJson = json.load(data)
-        if not dataJson:
+        with open(rout_data, 'r', encoding= 'utf-8') as data:
+            data_json = json.load(data)
+        if not data_json:
             return []
-        return dataJson
+        return data_json
     except FileNotFoundError:
-        print(f"Error: El archivo no se encontró en {routData}")
+        print(f"Error: El archivo no se encontró en {rout_data}")
         return []
     except json.JSONDecodeError:
         print("Error: El archivo no es un JSON válido.")
@@ -23,123 +23,123 @@ def readReminders() -> list:
         print(f"Ocurrió un error inesperado: {e}")
         return []
 
-def saveChanges(reminders: list) -> None:
-    routData = 'data\\reminders.json'
+def save_changes(reminders: list) -> None:
+    rout_data = 'data\\reminders.json'
     
     try:
-        with open(routData, 'w', encoding= 'utf-8') as data:
+        with open(rout_data, 'w', encoding= 'utf-8') as data:
             json.dump(reminders, data, indent=4, ensure_ascii=False)
             print("El archivo se guardo correctamente")
     except FileNotFoundError:
-        print(f"Error: El archivo no se encontró en {routData}")
+        print(f"Error: El archivo no se encontró en {rout_data}")
     except Exception as e:
         print(f"Ocurrió un error inesperado: {e}")
 
-def timeMatches(reminder: dict) -> bool:
-    timeNow = dt.datetime.now().strftime("%H:%M")
+def time_matches(reminder: dict) -> bool:
+    time_now = dt.datetime.now().strftime("%H:%M")
     
-    if reminder["hora"] == timeNow:
+    if reminder["hora"] == time_now:
         return True
     return False
 
-def dateMatches(reminder: dict) -> bool:
-    dateToday = dt.date.today().strftime("%Y-%m-%d")
+def date_matches(reminder: dict) -> bool:
+    date_today = dt.date.today().strftime("%Y-%m-%d")
     
     if reminder["tipo"] == "diario":
         return True
-    elif reminder["fecha"] == dateToday:
+    elif reminder["fecha"] == date_today:
         return True
     return False
 
-def isActive(reminder: dict) -> bool:
+def is_active(reminder: dict) -> bool:
     
     if reminder["activo"] == True:
         return True
     return False
 
-def notExecute(reminder: dict) -> bool:
+def not_execute(reminder: dict) -> bool:
     
     if reminder["ejecutado"] == False:
         return True
     return False
 
-def differentDay(lastExecute: str) -> bool: 
-    dateToday = dt.date.today().strftime("%Y-%m-%d")
+def different_day(last_execute: str) -> bool: 
+    date_today = dt.date.today().strftime("%Y-%m-%d")
     
-    if not lastExecute:
+    if not last_execute:
         return True
     
-    lastDate = lastExecute.split(" ")[0]   
-    return lastDate != dateToday
+    last_date = last_execute.split(" ")[0]   
+    return last_date != date_today
 
-def isInTimeRange(timeStart: str, timeEnd: str, now: str) -> bool:
-    return timeStart <= now <= timeEnd
+def is_in_time_range(time_start: str, time_end: str, now: str) -> bool:
+    return time_start <= now <= time_end
 
-def neverExecuted(lastExecution) -> bool:
-    return lastExecution is None
+def never_executed(last_execution) -> bool:
+    return last_execution is None
 
-def intervalElapsed(lastExecution: str, interval: int) -> bool:
-    lastExecutionDt = dt.datetime.strptime(lastExecution, "%Y-%m-%d %H:%M")
+def interval_elapsed(last_execution: str, interval: int) -> bool:
+    last_execution_dt = dt.datetime.strptime(last_execution, "%Y-%m-%d %H:%M")
     now = dt.datetime.now()
-    diffMinutes = (now - lastExecutionDt).total_seconds()/60
-    return diffMinutes >= interval
+    diff_minutes = (now - last_execution_dt).total_seconds()/60
+    return diff_minutes >= interval
 
-def canSendFrequent(reminder: dict) -> bool:
-    nowTime = dt.datetime.now().strftime("%H:%M")
+def can_send_frequent(reminder: dict) -> bool:
+    now_time = dt.datetime.now().strftime("%H:%M")
     
     if not reminder["activo"]:
         return False
     
-    if not isInTimeRange(reminder["horaInicio"], reminder["horaFin"], nowTime):
+    if not is_in_time_range(reminder["hora_inicio"], reminder["hora_fin"], now_time):
         return False
     
-    if neverExecuted(reminder["ultimaEjecucion"]):
+    if never_executed(reminder["ultima_ejecucion"]):
         return True
     
-    return intervalElapsed(reminder["ultimaEjecucion"], reminder["intervaloMinutos"])
+    return interval_elapsed(reminder["ultima_ejecucion"], reminder["intervalo_minutos"])
 
 #frecuente
 #diario
 #unico
 
-def ifCanSend(reminder: dict) -> bool:
+def if_can_send(reminder: dict) -> bool:
     if reminder["tipo"] == "unico":
-        return (isActive(reminder) and
-                notExecute(reminder) and
-                dateMatches(reminder) and 
-                timeMatches(reminder))
+        return (is_active(reminder) and
+                not_execute(reminder) and
+                date_matches(reminder) and 
+                time_matches(reminder))
     elif reminder["tipo"] == "diario":
-        return (isActive(reminder)and
-                differentDay(reminder["ultimaEjecucion"]) and
-                timeMatches(reminder))
+        return (is_active(reminder)and
+                different_day(reminder["ultima_ejecucion"]) and
+                time_matches(reminder))
     elif reminder["tipo"] == "frecuente":
-        return canSendFrequent(reminder)
+        return can_send_frequent(reminder)
         
     return False
 
 while True:
     now = dt.datetime.now()
-    currentMinute = now.strftime("%Y-%m-%d %H:%M")
+    current_minute = now.strftime("%Y-%m-%d %H:%M")
     
-    reminders = readReminders()
+    reminders = read_reminders()
     changes = False
     
     for reminder in reminders:
         if reminder["activo"] is False:
             continue
-        if reminder["ultimaEjecucion"] == currentMinute:
+        if reminder["ultima_ejecucion"] == current_minute:
             continue
-        if ifCanSend(reminder):
+        if if_can_send(reminder):
             #llamar funcion del brain que tenga el texto que se va a enviar
-            text = brain.buildMessage(reminder)
+            text = brain.build_message(reminder)
             #llamar funcion del sender para enviar el mensaje a whatsapp
-            sender.sendMessage(text)
+            sender.send_message(text)
             if reminder["tipo"] == "unico":
                 reminder["ejecutado"] = True
             
-            reminder["ultimaEjecucion"] = currentMinute
+            reminder["ultima_ejecucion"] = current_minute
             changes = True
     if changes:
-        saveChanges(reminders)
+        save_changes(reminders)
         
     time.sleep(30)

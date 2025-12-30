@@ -1,39 +1,39 @@
-def buildMessage(reminder: dict) -> str:
+def build_message(reminder: dict) -> str:
     return f"Recuerda {reminder['mensaje']}"
 
-def createReminderUnique(message: str, time: str, date: str) -> dict:
+def create_reminder_unique(message: str, time: str, date: str) -> dict:
     reminder = {
         "id": None,
         "mensaje": message,
         "hora": time,
         "tipo": "unico",
         "activo": True,
-        "ultimaEjecucion": None,
+        "ultima_ejecucion": None,
         "fecha": date,
         "ejecutado": False
     }
     return reminder
 
-def createReminderDaily(message: str, time: str) -> dict:
+def create_reminder_daily(message: str, time: str) -> dict:
     reminder = {
         "id": None,
         "mensaje": message,
         "hora": time,
         "tipo": "diario",
         "activo": True,
-        "ultimaEjecucion": None, 
+        "ultima_ejecucion": None, 
     }
     return reminder
 
-def createReminderFrequent(message: str, frecuency: int, timeStart: str, timeEnd: str) -> dict:
+def create_reminder_frequent(message: str, frecuency: int, time_start: str, time_end: str) -> dict:
     reminder = {
         "id": None,
         "mensaje": message,
-        "intervaloMinutos": frecuency,
-        "horaInicio": timeStart,
-        "horaFin": timeEnd,
+        "intervalo_minutos": frecuency,
+        "hora_inicio": time_start,
+        "hora_fin": time_end,
         "tipo": "frecuente",
         "activo": True,
-        "ultimaEjecucion": None, 
+        "ultima_ejecucion": None, 
     }
     return reminder
