@@ -3,10 +3,8 @@
         "id": 0,
         "mensaje": "Estirar espalda",
         "hora": "00:47",
-        "fecha": null,
         "tipo": "diaria",
         "activo": true,
-        "ejecutado": false,
         "ultima_ejecucion": "2025-12-23 00:47"
     }
 ]
