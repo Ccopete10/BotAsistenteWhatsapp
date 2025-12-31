@@ -90,7 +90,7 @@ while True:
     now = dt.datetime.now()
     current_minute = now.strftime("%Y-%m-%d %H:%M")
     
-    reminders = reminder_store.read_reminders()
+    reminders = reminder_store.load_reminders()
     changes = False
     
     for reminder in reminders:
@@ -109,6 +109,6 @@ while True:
             reminder["ultima_ejecucion"] = current_minute
             changes = True
     if changes:
-        reminder_store.save_changes(reminders)
+        reminder_store.save_reminders(reminders)
         
     time.sleep(30)
