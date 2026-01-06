@@ -1,6 +1,8 @@
+import uuid
+
 def create_reminder_unique(message: str, time: str, date: str) -> dict:
     reminder = {
-        "id": None,
+        "id": str(uuid.uuid4()),
         "mensaje": message,
         "hora": time,
         "tipo": "unico",
@@ -13,7 +15,7 @@ def create_reminder_unique(message: str, time: str, date: str) -> dict:
 
 def create_reminder_daily(message: str, time: str) -> dict:
     reminder = {
-        "id": None,
+        "id": str(uuid.uuid4()),
         "mensaje": message,
         "hora": time,
         "tipo": "diario",
@@ -24,7 +26,7 @@ def create_reminder_daily(message: str, time: str) -> dict:
 
 def create_reminder_frequent(message: str, frecuency: int, time_start: str, time_end: str) -> dict:
     reminder = {
-        "id": None,
+        "id": str(uuid.uuid4()),
         "mensaje": message,
         "intervalo_minutos": frecuency,
         "hora_inicio": time_start,

@@ -18,3 +18,8 @@ def load_reminders() -> list:
 def save_reminders(reminders: list) -> None:
     with open(REMINDER_PATH, 'w', encoding= 'utf-8') as data:
         json.dump(reminders, data, indent=4, ensure_ascii=False)
+
+def add_reminder(reminder: dict) -> None:
+    reminders = load_reminders()
+    reminders.append(reminder)
+    save_reminders(reminders)
