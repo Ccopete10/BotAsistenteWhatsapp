@@ -150,7 +150,7 @@ def process_message(message: str) -> str:
             elif reminder_type == "frecuente":
                 reminder = create_reminder_frequent(
                     state["data"]["message"],
-                    state["data"]["frecuency"],
+                    state["data"]["frequency"],
                     state["data"]["start_time"],
                     state["data"]["end_time"]    
                 )
