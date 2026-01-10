@@ -2,8 +2,8 @@
     {
         "id": 0,
         "mensaje": "Estirar espalda",
-        "hora": "00:47",
-        "tipo": "diaria",
+        "hora": "20:32",
+        "tipo": "diario",
         "activo": true,
         "ultima_ejecucion": "2025-12-23 00:47"
     }

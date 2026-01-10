@@ -2,6 +2,7 @@ from utils.text_utils import normalize_text
 from intent_detector import detect_intent
 from state_manager import load_state, save_state, reset_state
 from reminder_factory import create_reminder_unique, create_reminder_daily, create_reminder_frequent
+from utils import validators
 import reminder_store
 import sender
 
@@ -42,9 +43,14 @@ def handle_create_reminder(raw_text: str, normalized_text: str, state: dict) -> 
             return "Tipo inválido. Usa: unico, diario o frecuente."
     
     elif step == "ask_message":
-        state["data"]["message"] = raw_text
-        reminder_type = state["data"]["type"]
-        
+        if not validators.validate_empty_text(raw_text):
+            return "El mensaje no puede estar vacio"
+        elif not validators.validate_len_text(raw_text):
+            return "El mensaje es demasiado largo. Usa máximo 200 caracteres"
+        else:
+            state["data"]["message"] = raw_text
+            reminder_type = state["data"]["type"]
+            
         if reminder_type == "unico" or reminder_type == "diario":
             state["step"] = "ask_time"
             save_state(state)
@@ -56,8 +62,11 @@ def handle_create_reminder(raw_text: str, normalized_text: str, state: dict) -> 
             return "¿Cada cuántos minutos?"
         
     elif step == "ask_time":
-        state["data"]["time"] = normalized_text
-        
+        if not validators.validate_time(normalized_text):
+            return "Hora inválida. Usa el formato HH:MM"
+        else:
+            state["data"]["time"] = normalized_text
+            
         if state["data"]["type"] == "unico":
             state["step"] = "ask_date"
             save_state(state)
@@ -68,33 +77,43 @@ def handle_create_reminder(raw_text: str, normalized_text: str, state: dict) -> 
             return "¿Confirmas la creación del recordatorio? (sí / no)"
         
     elif step == "ask_frequency":
-        state["data"]["frequency"] = normalized_text 
-        state["step"] = "ask_range"
-        save_state(state)
-        return "¿Indica rango horario: inicio-fin (HH:MM - HH:MM)"
-    
+        if not validators.validate_frequency(normalized_text):
+            return "Dato no válido. Ingresa un número entre 1 y 1440 minutos"
+        else:
+            state["data"]["frequency"] = normalized_text 
+            state["step"] = "ask_range"
+            save_state(state)
+            return "¿Indica rango horario: inicio-fin (HH:MM - HH:MM)"
+        
     elif step == "ask_date":
-        state["data"]["date"] = normalized_text
-        state["step"] = "confirm"
-        save_state(state)
-        return "¿Confirmas la creación del recordatorio? (sí / no)"
+        if not validators.validate_date(normalized_text):
+            return "Dato no válido. Usa el formato YYYY-MM-DD"
+        else:
+            state["data"]["date"] = normalized_text
+            state["step"] = "confirm"
+            save_state(state)
+            return "¿Confirmas la creación del recordatorio? (sí / no)"
     
     elif step == "ask_range":
-        if "-" not in normalized_text:
-            return "Formato inválido. usa HH:MM - HH:MM"
+        range_result = validators.validate_time_range(normalized_text)
         
-        start, end = map(str.strip, normalized_text.split("-"))
-        state["data"]["start_time"] = start
-        state["data"]["end_time"] = end
-        state["step"] = "confirm"
-        save_state(state)
-        return "¿Confirmas la creación del recordatorio? (sí / no)"
-    
+        if not range_result:
+            return "Dato no válido. Usa el formato HH:MM - HH:MM"
+        else:
+            start_time, end_time = range_result
+            
+            state["data"]["start_time"] = start_time
+            state["data"]["end_time"] = end_time
+            state["step"] = "confirm"
+            save_state(state)
+            return "¿Confirmas la creación del recordatorio? (sí / no)"
+        
     elif step == "confirm":
         if normalized_text == "si":
             return ACTION_CREATE
-        else:
+        elif normalized_text == "no":
             return ACTION_CANCEL
+        return "Dato no válido. Usa el formato sí / no"
     return "Ocurrió un error en el flujo del recordatorio."
 
 def process_message(message: str) -> str:
@@ -137,6 +156,7 @@ def process_message(message: str) -> str:
                 
                 reminder_store.add_reminder(reminder)
                 reset_state()
+                return "Recordatorio creado exitosamente"
                 
             elif reminder_type == "diario":
                 reminder = create_reminder_daily(
@@ -146,6 +166,7 @@ def process_message(message: str) -> str:
                 
                 reminder_store.add_reminder(reminder)
                 reset_state()
+                return "Recordatorio creado exitosamente"
                 
             elif reminder_type == "frecuente":
                 reminder = create_reminder_frequent(
@@ -157,17 +178,27 @@ def process_message(message: str) -> str:
                 
                 reminder_store.add_reminder(reminder)
                 reset_state()
-                return "Recordatorio creado"
+                return "Recordatorio creado exitosamente"
+            return ""
                 
         elif result == ACTION_CANCEL:
             reset_state()
             return "Creacion cancelada. No se guardó ningún recordatorio."
-                
-                
+        
+        return result
+        
     elif state["mode"] == "edit_reminder":
         "sfsfs"
         
     elif state["mode"] == "delete_reminder":
         "sfsfs"
+    return "ocurrio un error"
+
+
+while True:
     
-    return "Ocurrio un error inesperado"
+    xd = process_message(input())
+    print(xd)
+    
+    if xd == "c":
+        False
