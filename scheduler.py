@@ -47,9 +47,19 @@ def is_in_time_range(time_start: str, time_end: str, now: str) -> bool:
 def never_executed(last_execution) -> bool:
     return last_execution is None
 
-def interval_elapsed(last_execution: str, interval: int) -> bool:
-    last_execution_dt = dt.datetime.strptime(last_execution, "%Y-%m-%d %H:%M")
+def today_time_to_datetime(time_str: str):
+    today = dt.datetime.now().date()
+    t = dt.datetime.strptime(time_str, "%H:%M").time()
+    return dt.datetime.combine(today,t)
+
+def interval_elapsed(last_execution: str, interval: int, hora_inicio: str) -> bool:
     now = dt.datetime.now()
+    
+    if last_execution is None:
+        last_execution_dt = today_time_to_datetime(hora_inicio)
+    else:
+        last_execution_dt = dt.datetime.strptime(last_execution, "%Y-%m-%d %H:%M")
+        
     diff_minutes = (now - last_execution_dt).total_seconds()/60
     return diff_minutes >= interval
 
@@ -65,7 +75,7 @@ def can_send_frequent(reminder: dict) -> bool:
     if never_executed(reminder["ultima_ejecucion"]):
         return True
     
-    return interval_elapsed(reminder["ultima_ejecucion"], reminder["intervalo_minutos"])
+    return interval_elapsed(reminder["ultima_ejecucion"], reminder["intervalo_minutos"], reminder["hora_inicio"])
 
 #frecuente
 #diario
@@ -103,10 +113,15 @@ while True:
             text = brain.build_message(reminder)
             #llamar funcion del sender para enviar el mensaje a whatsapp
             sender.send_message(text)
+            
             if reminder["tipo"] == "unico":
                 reminder["ejecutado"] = True
             
-            reminder["ultima_ejecucion"] = current_minute
+            if reminder["tipo"] == "frecuente" and reminder["ultima_ejecucion"] in None:
+                reminder["ultima_ejecucion"] = f"{now.date()} {reminder['hora_inicio']}"
+            else:
+                reminder["ultima_ejecucion"] = current_minute
+                
             changes = True
     if changes:
         reminder_store.save_reminders(reminders)
