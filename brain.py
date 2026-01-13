@@ -10,7 +10,7 @@ ACTION_CREATE = "CREATE"
 ACTION_CANCEL = "CANCEL"
 
 def build_message(reminder: dict) -> str:
-    return f"Recuerda {reminder['mensaje']}"
+    return f"📅 Recordatorio: {reminder['mensaje']}"
 
 def change_mode(intent: str, state: dict) -> bool:
     if intent == "create_reminder":
@@ -38,15 +38,15 @@ def handle_create_reminder(raw_text: str, normalized_text: str, state: dict) -> 
             state["data"]["type"] = normalized_text
             state["step"] = "ask_message"
             save_state(state)
-            return "¿Cual es el mensaje del recordatorio?"
+            return "Escribe el mensaje del recordatorio que deseas guardar ✍️"
         else:
-            return "Tipo inválido. Usa: unico, diario o frecuente."
+            return "Tipo inválido ❌. Usa: único, diario o frecuente."
     
     elif step == "ask_message":
         if not validators.validate_empty_text(raw_text):
-            return "El mensaje no puede estar vacio"
+            return "El mensaje no puede estar vacío ❌"
         elif not validators.validate_len_text(raw_text):
-            return "El mensaje es demasiado largo. Usa máximo 200 caracteres"
+            return "El mensaje es demasiado largo ❌. Máximo 200 caracteres"
         else:
             state["data"]["message"] = raw_text
             reminder_type = state["data"]["type"]
@@ -54,51 +54,51 @@ def handle_create_reminder(raw_text: str, normalized_text: str, state: dict) -> 
         if reminder_type == "unico" or reminder_type == "diario":
             state["step"] = "ask_time"
             save_state(state)
-            return "¿A que hora? (HH:MM)"
+            return "⏰ ¿A que hora? (HH:MM)"
         
         elif reminder_type == "frecuente":
             state["step"] = "ask_frequency"
             save_state(state)
-            return "¿Cada cuántos minutos?"
+            return "⏱️ ¿Cada cuántos minutos?"
         
     elif step == "ask_time":
         if not validators.validate_time(normalized_text):
-            return "Hora inválida. Usa el formato HH:MM"
+            return "Hora inválida ❌. Usa el formato HH:MM"
         else:
             state["data"]["time"] = normalized_text
             
         if state["data"]["type"] == "unico":
             state["step"] = "ask_date"
             save_state(state)
-            return "¿Para que fecha? (YYYY-MM-DD)"
+            return "📅 ¿Para que fecha? (YYYY-MM-DD)"
         else:
             state["step"] = "confirm"
             save_state(state)
-            return "¿Confirmas la creación del recordatorio? (sí / no)"
+            return "¿Confirmas la creación del recordatorio? (sí / no) ✅❌"
         
     elif step == "ask_frequency":
         if not validators.validate_frequency(normalized_text):
-            return "Dato no válido. Ingresa un número entre 1 y 1440 minutos"
+            return "Dato no válido ❌. Ingresa un número entre 1 y 1440 minutos"
         else:
             state["data"]["frequency"] = normalized_text 
             state["step"] = "ask_range"
             save_state(state)
-            return "¿Indica rango horario: inicio-fin (HH:MM - HH:MM)"
+            return "⏰ Indica el rango horario: inicio-fin (HH:MM - HH:MM)"
         
     elif step == "ask_date":
         if not validators.validate_date(normalized_text):
-            return "Dato no válido. Usa el formato YYYY-MM-DD"
+            return "La fecha no es válida ❌. Usa el formato YYYY-MM-DD"
         else:
             state["data"]["date"] = normalized_text
             state["step"] = "confirm"
             save_state(state)
-            return "¿Confirmas la creación del recordatorio? (sí / no)"
+            return "¿Confirmas la creación del recordatorio? (sí / no) ✅❌"
     
     elif step == "ask_range":
         range_result = validators.validate_time_range(normalized_text)
         
         if not range_result:
-            return "Dato no válido. Usa el formato HH:MM - HH:MM"
+            return "Rango horario no válido ❌. Usa el formato HH:MM - HH:MM"
         else:
             start_time, end_time = range_result
             
@@ -106,20 +106,26 @@ def handle_create_reminder(raw_text: str, normalized_text: str, state: dict) -> 
             state["data"]["end_time"] = end_time
             state["step"] = "confirm"
             save_state(state)
-            return "¿Confirmas la creación del recordatorio? (sí / no)"
+            return "¿Confirmas la creación del recordatorio? (sí / no) ✅❌"
         
     elif step == "confirm":
         if normalized_text == "si":
             return ACTION_CREATE
         elif normalized_text == "no":
             return ACTION_CANCEL
-        return "Dato no válido. Usa el formato sí / no"
-    return "Ocurrió un error en el flujo del recordatorio."
+        return "Respuesta inválida ❌. Usa sí o no"
+    return "Ups 😕, ocurrió un error en el flujo de creación del recordatorio. Intenta nuevamente."
 
 def process_message(message: str) -> str:
     raw_text = message
     normalized_text = normalize_text(message)
     state = load_state()
+    
+    if state["first_message"] == True:
+        state["first_message"] = False
+        save_state(state)
+        return "Hola Christian 👋, soy tu asistente virtual 🤖. ¿Qué quieres hacer hoy?"
+        
     
     # Bot en espera -> detecta intención
     if state["mode"] == "idle":
@@ -127,18 +133,18 @@ def process_message(message: str) -> str:
         changed = change_mode(intent, state)
         
         if not changed:
-            return "No entendi lo que quieres hacer"
+            return "No entendi lo que quieres hacer 🤔"
         
         save_state(state)
         
         if state["mode"] == "create_reminder":
-            return "¿Qué tipo de recordatorio quieres que te cree? ¿Unico, diario o frecuente?"
+            return "⏰ ¿Qué tipo de recordatorio quieres que te cree? ¿Unico, diario o frecuente?"
         
         elif state["mode"] == "edit_reminder":
-            return "¿Qué recordatorio deseas editar?"
+            return "✏️ ¿Qué recordatorio deseas editar?"
         
         elif state["mode"] == "delete_reminder":
-            return "¿Qué recordatorio deseas eliminar?"
+            return "🗑️ ¿Qué recordatorio deseas eliminar?"
         
     # Continuacion de flujos
     elif state["mode"] == "create_reminder":
@@ -156,7 +162,7 @@ def process_message(message: str) -> str:
                 
                 reminder_store.add_reminder(reminder)
                 reset_state()
-                return "Recordatorio creado exitosamente"
+                return "¡Listo! Tu recordatorio fue creado con éxito 🎉"
                 
             elif reminder_type == "diario":
                 reminder = create_reminder_daily(
@@ -166,7 +172,7 @@ def process_message(message: str) -> str:
                 
                 reminder_store.add_reminder(reminder)
                 reset_state()
-                return "Recordatorio creado exitosamente"
+                return "¡Listo! Tu recordatorio fue creado con éxito 🎉"
                 
             elif reminder_type == "frecuente":
                 reminder = create_reminder_frequent(
@@ -178,12 +184,12 @@ def process_message(message: str) -> str:
                 
                 reminder_store.add_reminder(reminder)
                 reset_state()
-                return "Recordatorio creado exitosamente"
+                return "¡Listo! Tu recordatorio fue creado con éxito 🎉"
             return ""
                 
         elif result == ACTION_CANCEL:
             reset_state()
-            return "Creacion cancelada. No se guardó ningún recordatorio."
+            return "Creacion cancelada ❌. No se guardó ningún recordatorio."
         
         return result
         
@@ -194,11 +200,14 @@ def process_message(message: str) -> str:
         "sfsfs"
     return "ocurrio un error"
 
+try:
+    while True:
+        xd = process_message(input())
+        print(xd)
 
-while True:
-    
-    xd = process_message(input())
-    print(xd)
-    
-    if xd == "c":
-        break
+        if xd == "c":
+            reset_state()
+            break
+except KeyboardInterrupt:
+    reset_state()
+    print("\nConversación reiniciada.")

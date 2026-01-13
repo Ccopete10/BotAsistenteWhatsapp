@@ -4,6 +4,7 @@ import os
 STATE_PATH = os.path.join("data","conversation_state.json")
 DEFAULT_STATE = {
     "mode": "idle",
+    "first_message": True,
     "step": None,
     "data": {}
     

@@ -1,5 +1,6 @@
 {
     "mode": "idle",
+    "first_message": true,
     "step": null,
     "data": {}
 }
