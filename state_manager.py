@@ -5,6 +5,7 @@ STATE_PATH = os.path.join("data","conversation_state.json")
 DEFAULT_STATE = {
     "mode": "idle",
     "first_message": True,
+    "hibernating": True,
     "step": None,
     "data": {}
     

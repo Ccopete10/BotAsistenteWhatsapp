@@ -8,6 +8,19 @@ import sender
 
 ACTION_CREATE = "CREATE"
 ACTION_CANCEL = "CANCEL"
+GREETING_MESSAGE = (
+    "Hola Christian 👋, soy tu asistente virtual 🤖.\n\n"
+    "Puedo ayudarte a:\n"
+    "📌 Crear recordatorios\n"
+    "✏️ Editar recordatorios\n"
+    "🗑️ Eliminar recordatorios\n"
+    "📋 Ver tus recordatorios\n\n"
+    "Cuando quieras salir o cancelar la conversación, escribe:\n\n"
+    "👉 salir, apagar o cancelar\n\n"
+    "¿Qué deseas hacer hoy?"
+)
+HIBERNATION_MESSAGE = "Modo hibernación activado 💤🤖. Escríbeme cuando me necesites."
+
 
 def build_message(reminder: dict) -> str:
     return f"📅 Recordatorio: {reminder['mensaje']}"
@@ -121,11 +134,19 @@ def process_message(message: str) -> str:
     normalized_text = normalize_text(message)
     state = load_state()
     
-    if state["first_message"] == True:
+    if state["hibernating"]:
+        state["hibernating"] = False
+        state["first_message"] = True
+        save_state(state)
+        
+    if state["first_message"]:
         state["first_message"] = False
         save_state(state)
-        return "Hola Christian 👋, soy tu asistente virtual 🤖. ¿Qué quieres hacer hoy?"
-        
+        return GREETING_MESSAGE
+    
+    if normalized_text in ["cancelar", "salir", "apagar"]:
+        reset_state()
+        return HIBERNATION_MESSAGE
     
     # Bot en espera -> detecta intención
     if state["mode"] == "idle":
@@ -202,12 +223,8 @@ def process_message(message: str) -> str:
 
 try:
     while True:
-        xd = process_message(input())
-        print(xd)
-
-        if xd == "c":
-            reset_state()
-            break
+        sender.send_message(process_message(input()))
+        
 except KeyboardInterrupt:
     reset_state()
     print("\nConversación reiniciada.")

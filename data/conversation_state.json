@@ -1,6 +1,7 @@
 {
     "mode": "idle",
     "first_message": true,
+    "hibernating": true,
     "step": null,
     "data": {}
 }
