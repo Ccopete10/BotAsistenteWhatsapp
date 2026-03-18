@@ -12,9 +12,9 @@ GREETING_MESSAGE = (
     "Hola Christian 👋, soy tu asistente virtual 🤖.\n\n"
     "Puedo ayudarte a:\n"
     "📌 Crear recordatorios\n"
+    "📋 Ver tus recordatorios\n"
     "✏️ Editar recordatorios\n"
-    "🗑️ Eliminar recordatorios\n"
-    "📋 Ver tus recordatorios\n\n"
+    "🗑️ Eliminar recordatorios\n\n"
     "Cuando quieras salir o cancelar la conversación, escribe:\n\n"
     "👉 salir, apagar o cancelar\n\n"
     "¿Qué deseas hacer hoy?"
@@ -31,6 +31,11 @@ def change_mode(intent: str, state: dict) -> bool:
         state["step"] = "ask_type"
         return True
     
+    elif intent == "list_reminder":
+        state["mode"] = "list_reminder"
+        state["step"] = "ask_type"
+        return True
+    
     elif intent == "edit_reminder":
         state["mode"] = "edit_reminder"
         state["step"] = "ask_id"
@@ -42,6 +47,25 @@ def change_mode(intent: str, state: dict) -> bool:
         return True
     
     return False
+
+def filter_reminders_by_type(reminders: list, type: str) -> list:
+    
+
+def handle_list_reminder(raw_text: str, normalized_text: str, state: dict) -> str:
+    step = state["step"]
+    
+    if step == "ask_type":
+        if normalized_text in ["unico", "diario", "frecuente"]:
+            state["data"]["type"] = normalized_text
+            state["step"] = "show_list"
+            save_state(state)
+        else:
+            return "Tipo inválido ❌. Usa: único, diario o frecuente."
+        
+    elif step == "show_list":
+        reminder_type = state["data"]["type"]
+        if reminder_type == "unico":
+            
 
 def handle_create_reminder(raw_text: str, normalized_text: str, state: dict) -> str:
     step = state["step"]
@@ -133,6 +157,7 @@ def process_message(message: str) -> str:
     raw_text = message
     normalized_text = normalize_text(message)
     state = load_state()
+    reminders = reminder_store.load_reminders()
     
     if state["hibernating"]:
         state["hibernating"] = False
@@ -159,7 +184,10 @@ def process_message(message: str) -> str:
         save_state(state)
         
         if state["mode"] == "create_reminder":
-            return "⏰ ¿Qué tipo de recordatorio quieres que te cree? ¿Unico, diario o frecuente?"
+            return "⏰ ¿Qué tipo de recordatorio quieres que te cree? ¿Único, diario o frecuente?"
+        
+        if state["mode"] == "list_reminder":
+            return "¿Qué tipo de recordatorios quieres ver? 📌 Únicos, diarios o frecuentes?"
         
         elif state["mode"] == "edit_reminder":
             return "✏️ ¿Qué recordatorio deseas editar?"
@@ -213,6 +241,9 @@ def process_message(message: str) -> str:
             return "Creacion cancelada ❌. No se guardó ningún recordatorio."
         
         return result
+    
+    elif state["mode"] == "list_reminder":
+        "sds"
         
     elif state["mode"] == "edit_reminder":
         "sfsfs"
