@@ -8,7 +8,6 @@ def contains_any(text: str, words: list[str]) -> bool:
 
 def detect_intent(text: str) -> str:
     # text debe de venir normalizado
-    
     if not contains_any(text, WORDS_REMINDER):
         return "idle"
     elif contains_any(text, WORDS_CREATE):
@@ -17,6 +16,5 @@ def detect_intent(text: str) -> str:
         return "edit_reminder"
     elif contains_any(text, WORDS_DELETE):
         return "delete_reminder"
-    
-    return "idle"
-    
+    else:
+        return "idle"
