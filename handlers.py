@@ -1,7 +1,10 @@
 
 from config.actions import ACTION_CANCEL, ACTION_CREATE
+import reminder_store
 from state_manager import save_state
 from utils import validators
+
+reminders = reminder_store.load_reminders
 
 def handle_create_reminder(raw_text: str, normalized_text: str, state: dict) -> str:
     step = state["step"]
@@ -13,7 +16,7 @@ def handle_create_reminder(raw_text: str, normalized_text: str, state: dict) -> 
             save_state(state)
             return "Escribe el mensaje del recordatorio que deseas guardar ✍️"
         else:
-            return "Tipo inválido ❌. Usa: único, diario o frecuente."
+            return "Tipo inválido ❌. Usa: unico, diario o frecuente."
     
     elif step == "ask_message":
         if not validators.validate_empty_text(raw_text):
@@ -89,7 +92,7 @@ def handle_create_reminder(raw_text: str, normalized_text: str, state: dict) -> 
         return "Respuesta inválida ❌. Usa sí o no"
     return "Ups 😕, ocurrió un error en el flujo de creación del recordatorio. Intenta nuevamente."
 
-def handle_list_reminder(raw_text: str, normalized_text: str, state: dict) -> str:
+def handle_list_reminder(normalized_text: str, state: dict) -> str:
     step = state["step"]
     
     if step == "ask_type":
@@ -98,11 +101,38 @@ def handle_list_reminder(raw_text: str, normalized_text: str, state: dict) -> st
             state["step"] = "show_list"
             save_state(state)
         else:
-            return "Tipo inválido ❌. Usa: único, diario o frecuente."
+            return "Tipo inválido ❌. Usa: unico, diario o frecuente."
         
     elif step == "show_list":
         reminder_type = state["data"]["type"]
-        if reminder_type == "unico": 
-            
-def filter_reminders_by_type(reminders: list, type: str) -> list:
-    pass
+        filter_reminder = [x for x in reminders if x["tipo"] == reminder_type]
+
+        if not filter_reminder:
+            return f"No se encontraron recordatorios del tipo {reminder_type}."
+        
+        message = f"📝 Recordatorios de tipo {reminder_type}:\n\n"
+
+        if reminder_type == "unico":
+            for i in filter_reminder:
+                message += (
+                    f"• {i["mensaje"]}\n"
+                    f"  Fecha: {i["fecha"]}\n"
+                    f"  Hora: {i["hora"]}\n\n"
+                )
+
+        elif reminder_type == "diario":
+            for i in filter_reminder:
+                message += (
+                    f"• {i["mensaje"]}\n"
+                    f"  Hora: {i["hora"]}\n\n"
+                )
+        
+        elif reminder_type == "frecuente":
+            for i in filter_reminder:
+                message += (
+                    f"• {i["mensaje"]}\n"
+                    f"  Intervalo de tiempo: {i["intervalo_minutos"]}\n"
+                    f"  Hora inicio: {i["hora_inicio"]}\n"
+                    f"  Hora fin: {i["hora_fin"]}\n"
+                )
+        return message

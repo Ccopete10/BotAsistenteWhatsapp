@@ -103,7 +103,7 @@ def process_message(message: str) -> str:
         return result
     
     elif state["mode"] == "list_reminder":
-        "sds"
+        return handle_list_reminder(normalized_text, state)
         
     elif state["mode"] == "edit_reminder":
         "sfsfs"
