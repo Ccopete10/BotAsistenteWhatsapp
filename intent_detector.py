@@ -1,4 +1,5 @@
 WORDS_CREATE = ["crear", "nuevo", "agregar", "anadir", "creame"]
+WORDS_LIST = ["listar", "ver"]
 WORDS_EDIT= ["editar", "modificar", "cambiar"]
 WORDS_DELETE = ["eliminar", "borrar", "quitar"]
 WORDS_REMINDER = ["recordatorio", "reminder"]
@@ -10,6 +11,8 @@ def detect_intent(text: str) -> str:
     # text debe de venir normalizado
     if not contains_any(text, WORDS_REMINDER):
         return "idle"
+    elif contains_any(text, WORDS_LIST):
+        return "list_reminder"
     elif contains_any(text, WORDS_CREATE):
         return "create_reminder"
     elif contains_any(text, WORDS_EDIT):

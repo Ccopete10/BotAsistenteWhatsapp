@@ -1,4 +1,4 @@
-from config.actions import ACTION_CANCEL, ACTION_CREATE
+from config.actions import ACTION_CANCEL, ACTION_CREATE, ACTION_LEAVE
 from config.messages import GREETING_MESSAGE, HIBERNATION_MESSAGE
 from utils.text_utils import normalize_text
 from intent_detector import detect_intent
@@ -44,10 +44,10 @@ def process_message(message: str) -> str:
         save_state(state)
         
         if state["mode"] == "create_reminder":
-            return "⏰ ¿Qué tipo de recordatorio quieres que te cree? ¿Único, diario o frecuente?"
+            return "⏰ ¿A qué categoria corresponde el recordatorio que quieres que te cree? ¿Únicos, Diarios o Frecuentes?"
         
         elif state["mode"] == "list_reminder":
-            return "¿Qué tipo de recordatorios quieres ver? 📌 Únicos, diarios o frecuentes?"
+            return "¿Qué categoria de tipos de recordatorios quieres ver? 📌 Únicos, Diarios o Frecuentes?"
         
         elif state["mode"] == "edit_reminder":
             return "✏️ ¿Qué recordatorio deseas editar?"
@@ -62,7 +62,7 @@ def process_message(message: str) -> str:
         if result == ACTION_CREATE:
             reminder_type = state["data"]["type"]
             
-            if reminder_type == "unico":
+            if reminder_type == "unicos":
                 reminder = create_reminder_unique(
                     state["data"]["message"],
                     state["data"]["time"],
@@ -73,7 +73,7 @@ def process_message(message: str) -> str:
                 reset_state()
                 return "¡Listo! Tu recordatorio fue creado con éxito 🎉"
                 
-            elif reminder_type == "diario":
+            elif reminder_type == "diarios":
                 reminder = create_reminder_daily(
                     state["data"]["message"],
                     state["data"]["time"]
@@ -83,7 +83,7 @@ def process_message(message: str) -> str:
                 reset_state()
                 return "¡Listo! Tu recordatorio fue creado con éxito 🎉"
                 
-            elif reminder_type == "frecuente":
+            elif reminder_type == "frecuentes":
                 reminder = create_reminder_frequent(
                     state["data"]["message"],
                     state["data"]["frequency"],
@@ -103,7 +103,17 @@ def process_message(message: str) -> str:
         return result
     
     elif state["mode"] == "list_reminder":
-        return handle_list_reminder(normalized_text, state)
+        result = handle_list_reminder(normalized_text, state, reminders)
+        
+        if result == ACTION_LEAVE:
+            state["mode"] = "idle"
+            state["first_message"] = False
+            state["hibernating"] = False
+            state["step"] = None
+            save_state(state)
+            return GREETING_MESSAGE
+        
+        return result
         
     elif state["mode"] == "edit_reminder":
         "sfsfs"

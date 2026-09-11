@@ -1,5 +1,5 @@
 
-from config.actions import ACTION_CANCEL, ACTION_CREATE
+from config.actions import ACTION_CANCEL, ACTION_CREATE, ACTION_LEAVE
 import reminder_store
 from state_manager import save_state
 from utils import validators
@@ -10,13 +10,13 @@ def handle_create_reminder(raw_text: str, normalized_text: str, state: dict) -> 
     step = state["step"]
     
     if step == "ask_type":
-        if normalized_text in ["unico", "diario", "frecuente"]:
+        if normalized_text in ["unicos", "diarios", "frecuentes"]:
             state["data"]["type"] = normalized_text
             state["step"] = "ask_message"
             save_state(state)
             return "Escribe el mensaje del recordatorio que deseas guardar ✍️"
         else:
-            return "Tipo inválido ❌. Usa: unico, diario o frecuente."
+            return "Tipo inválido ❌. Usa: unicos, diarios o frecuentes."
     
     elif step == "ask_message":
         if not validators.validate_empty_text(raw_text):
@@ -27,12 +27,12 @@ def handle_create_reminder(raw_text: str, normalized_text: str, state: dict) -> 
             state["data"]["message"] = raw_text
             reminder_type = state["data"]["type"]
             
-        if reminder_type == "unico" or reminder_type == "diario":
+        if reminder_type == "unicos" or reminder_type == "diarios":
             state["step"] = "ask_time"
             save_state(state)
             return "⏰ ¿A que hora? (HH:MM)"
         
-        elif reminder_type == "frecuente":
+        elif reminder_type == "frecuentes":
             state["step"] = "ask_frequency"
             save_state(state)
             return "⏱️ ¿Cada cuántos minutos?"
@@ -43,7 +43,7 @@ def handle_create_reminder(raw_text: str, normalized_text: str, state: dict) -> 
         else:
             state["data"]["time"] = normalized_text
             
-        if state["data"]["type"] == "unico":
+        if state["data"]["type"] == "unicos":
             state["step"] = "ask_date"
             save_state(state)
             return "📅 ¿Para que fecha? (YYYY-MM-DD)"
@@ -92,42 +92,46 @@ def handle_create_reminder(raw_text: str, normalized_text: str, state: dict) -> 
         return "Respuesta inválida ❌. Usa sí o no"
     return "Ups 😕, ocurrió un error en el flujo de creación del recordatorio. Intenta nuevamente."
 
-def handle_list_reminder(normalized_text: str, state: dict) -> str:
-    step = state["step"]
+def handle_list_reminder(normalized_text: str, state: dict, reminders: list) -> str:
     
-    if step == "ask_type":
-        if normalized_text in ["unico", "diario", "frecuente"]:
+    if state["step"] == "ask_type":
+        if normalized_text in ["unicos", "diarios", "frecuentes"]:
             state["data"]["type"] = normalized_text
             state["step"] = "show_list"
             save_state(state)
         else:
-            return "Tipo inválido ❌. Usa: unico, diario o frecuente."
+            state["step"] = "ask_type"
+            return "Tipo inválido ❌. Usa: Únicos, Diarios o Frecuentes."
         
-    elif step == "show_list":
+    if state["step"] == "show_list":
         reminder_type = state["data"]["type"]
         filter_reminder = [x for x in reminders if x["tipo"] == reminder_type]
 
         if not filter_reminder:
-            return f"No se encontraron recordatorios del tipo {reminder_type}."
+            state["data"].clear()
+            state["step"] = "ask_type"
+            save_state(state)
+            return f"No se encontraron recordatorios en la categoria {reminder_type}. Vuelve a elegir una categoria: Únicos, Diarios o Frecuentes"
         
-        message = f"📝 Recordatorios de tipo {reminder_type}:\n\n"
+        message = f"📝 Recordatorios en la categoria {reminder_type}:\n\n"
 
-        if reminder_type == "unico":
+        if reminder_type == "unicos":
             for i in filter_reminder:
                 message += (
                     f"• {i["mensaje"]}\n"
                     f"  Fecha: {i["fecha"]}\n"
                     f"  Hora: {i["hora"]}\n\n"
                 )
+            
 
-        elif reminder_type == "diario":
+        elif reminder_type == "diarios":
             for i in filter_reminder:
                 message += (
                     f"• {i["mensaje"]}\n"
                     f"  Hora: {i["hora"]}\n\n"
                 )
-        
-        elif reminder_type == "frecuente":
+                
+        elif reminder_type == "frecuentes":
             for i in filter_reminder:
                 message += (
                     f"• {i["mensaje"]}\n"
@@ -135,4 +139,27 @@ def handle_list_reminder(normalized_text: str, state: dict) -> str:
                     f"  Hora inicio: {i["hora_inicio"]}\n"
                     f"  Hora fin: {i["hora_fin"]}\n"
                 )
-        return message
+                
+        state["data"].clear()
+        state["step"] = "ask_list_action"
+        save_state(state)
+        
+        return message + "\n¿Quieres salir al menu principal o listar otra categoria?"
+    
+    if state["step"] == "ask_list_action":
+        return ask_list_action(normalized_text, state) 
+    else:
+        return "Vuelve a intentar tu petición de la manera correcta"
+
+def ask_list_action(normalized_text: str, state: dict) -> str:
+    
+    if normalized_text in ["salir", "leave", "menu"]:
+        return ACTION_LEAVE
+    
+    elif normalized_text in ["listar", "ver"]:
+        state["step"] = "ask_type"
+        save_state(state)
+        return "¿Que categoria quieres ver: Únicos, Diarios o Frecuentes?"
+        
+    else:
+        return "No entendi lo que quieres hacer, escribe: (salir, menu, listar o ver)"
