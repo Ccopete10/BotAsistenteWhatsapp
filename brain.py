@@ -1,10 +1,10 @@
 from config.actions import ACTION_CANCEL, ACTION_CREATE, ACTION_LEAVE
-from config.messages import GREETING_MESSAGE, HIBERNATION_MESSAGE
+from config.messages import GREETING_MESSAGE, HIBERNATION_MESSAGE, OPTIONS_LIST
 from utils.text_utils import normalize_text
 from intent_detector import detect_intent
 from state_manager import load_state, save_state, reset_state
 from reminder_factory import create_reminder_unique, create_reminder_daily, create_reminder_frequent
-from handlers import handle_create_reminder, handle_list_reminder
+from handlers import handle_create_reminder, handle_list_reminder, ask_list_option
 from mode_changer import change_mode
 import reminder_store
 import sender
@@ -103,17 +103,22 @@ def process_message(message: str) -> str:
         return result
     
     elif state["mode"] == "list_reminder":
-        result = handle_list_reminder(normalized_text, state, reminders)
         
-        if result == ACTION_LEAVE:
+        result = handle_list_reminder(normalized_text, state, reminders)
+        return result 
+    
+    elif state["mode"] == "after_list":
+
+        options = ask_list_option(normalized_text, state) 
+
+        if options == ACTION_LEAVE:
             state["mode"] = "idle"
             state["first_message"] = False
             state["hibernating"] = False
             state["step"] = None
             save_state(state)
             return GREETING_MESSAGE
-        
-        return result
+        return options
         
     elif state["mode"] == "edit_reminder":
         "sfsfs"

@@ -1,5 +1,6 @@
 
 from config.actions import ACTION_CANCEL, ACTION_CREATE, ACTION_LEAVE
+from config.messages import OPTIONS_LIST
 import reminder_store
 from state_manager import save_state
 from utils import validators
@@ -122,14 +123,23 @@ def handle_list_reminder(normalized_text: str, state: dict, reminders: list) -> 
                     f"  Fecha: {i["fecha"]}\n"
                     f"  Hora: {i["hora"]}\n\n"
                 )
+            state["data"].clear()
+            state["mode"] = "after_list"
+            state["step"] = "ask_list_action"
+            save_state(state)
+            return f"{message}\n{OPTIONS_LIST}"
             
-
         elif reminder_type == "diarios":
             for i in filter_reminder:
                 message += (
                     f"• {i["mensaje"]}\n"
                     f"  Hora: {i["hora"]}\n\n"
                 )
+            state["data"].clear()
+            state["mode"] = "after_list"
+            state["step"] = "ask_list_action"
+            save_state(state)
+            return f"{message}\n{OPTIONS_LIST}"
                 
         elif reminder_type == "frecuentes":
             for i in filter_reminder:
@@ -139,27 +149,24 @@ def handle_list_reminder(normalized_text: str, state: dict, reminders: list) -> 
                     f"  Hora inicio: {i["hora_inicio"]}\n"
                     f"  Hora fin: {i["hora_fin"]}\n"
                 )
+            state["data"].clear()
+            state["mode"] = "after_list"
+            state["step"] = "ask_list_action"
+            save_state(state)
+            return f"{message}\n{OPTIONS_LIST}"
                 
-        state["data"].clear()
-        state["step"] = "ask_list_action"
-        save_state(state)
-        
-        return message + "\n¿Quieres salir al menu principal o listar otra categoria?"
-    
-    if state["step"] == "ask_list_action":
-        return ask_list_action(normalized_text, state) 
-    else:
-        return "Vuelve a intentar tu petición de la manera correcta"
+        return message 
 
-def ask_list_action(normalized_text: str, state: dict) -> str:
+def ask_list_option(normalized_text: str, state: dict) -> str:
     
-    if normalized_text in ["salir", "leave", "menu"]:
+    if normalized_text in ["menu"]:
         return ACTION_LEAVE
     
-    elif normalized_text in ["listar", "ver"]:
+    elif normalized_text in ["listar"]:
+        state["mode"] = "list_reminder"
         state["step"] = "ask_type"
         save_state(state)
         return "¿Que categoria quieres ver: Únicos, Diarios o Frecuentes?"
         
     else:
-        return "No entendi lo que quieres hacer, escribe: (salir, menu, listar o ver)"
+        return "No entendi lo que quieres hacer, escribe: (Editar, Eliminar, Listar o Menú)"
